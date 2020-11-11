@@ -1,4 +1,4 @@
-# cudos-token
+# cudos-network
 
 ### Cudos Token Smart Contract
 
@@ -11,6 +11,17 @@
   * Defines the total supply of tokens - `10 billion` tokens are created upon contract creation	
 * The token has a `transfersEnabled` flag that can be toggled to enable transfers for all. Only admin addresses defined in the linked `CudosAccessControls` contract can toggle this flag.	
 * Whitelisted addresses can transfer tokens even if the `transfersEnabled` flag is set to false. The whitelist is defined in the linked `CudosAccessControls` contract.	
+
+### Cudos Vesting Contracts
+
+* `VestingContract` is not directly based on a specific EIP but does borrow some leanings from the open-zepplin library
+* Designed to work with Cudos ERC20 token contract but would support any standard ERC20 contract
+* General rules are as follows:
+    * Single vesting schedule per `address`
+    * Schedules are defined as address, total amount, total time vested
+    * User can withdraw every second and will issue allowance since last draw down
+    * Cudo is in control of setting up and cancelling any vesting schedules
+    * Utility methods can be called to gain insight into a beneficiaries remaining allowance and draw down rates
 
 #### Cudos Token set-up steps
 
