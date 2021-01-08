@@ -62,6 +62,13 @@ contract('CudosToken', function ([_, cudos, partner, anotherAccount, otherWhitel
     });
   });
 
+  it('Reverts during construction when initial supply recipient is zero', async function () {
+    await expectRevert(
+      CudosToken.new(this.accessControls.address, ZERO_ADDRESS, {from: cudos}),
+      'CudosToken: Invalid recipient of the initial supply'
+    )
+  })
+
   shouldBehaveLikeERC20('ERC20', initialSupply, cudos, partner, anotherAccount);
 
   describe('decrease allowance', function () {
@@ -219,7 +226,7 @@ contract('CudosToken', function ([_, cudos, partner, anotherAccount, otherWhitel
 
     context('when transfers are disabled', function () {
       beforeEach(async function () {
-        await this.token.toggleTransfers({from: cudos});
+        this.token = await CudosToken.new(this.accessControls.address, cudos, {from: cudos});
         (await this.token.transfersEnabled()).should.equal(false);
       });
 
@@ -238,15 +245,6 @@ contract('CudosToken', function ([_, cudos, partner, anotherAccount, otherWhitel
     });
 
     context('when transfers are enabled', function () {
-      beforeEach(async function () {
-        await this.token.toggleTransfers({from: cudos});
-        await expectRevert(
-          this.token.transfer(cudos, ONE_TOKEN, {from: anotherAccount}),
-          'Caller can not currently transfer'
-        );
-        await this.token.toggleTransfers({from: cudos});
-        (await this.token.transfersEnabled()).should.equal(true);
-      });
 
       it('should allow transfer for non-whitelisted token owner', async function () {
         (await this.accessControls.hasWhitelistRole(cudos)).should.equal(true);
@@ -263,7 +261,7 @@ contract('CudosToken', function ([_, cudos, partner, anotherAccount, otherWhitel
   describe('_transferFrom', function () {
     context('when transfers are disabled', function () {
       beforeEach(async function () {
-        await this.token.toggleTransfers({from: cudos});
+        this.token = await CudosToken.new(this.accessControls.address, cudos, {from: cudos});
         (await this.token.transfersEnabled()).should.equal(false);
       });
 
@@ -294,17 +292,6 @@ contract('CudosToken', function ([_, cudos, partner, anotherAccount, otherWhitel
     });
 
     context('when transfers are enabled', function () {
-      beforeEach(async function () {
-        await this.token.toggleTransfers({from: cudos});
-        await expectRevert(
-          this.token.transfer(cudos, ONE_TOKEN, {from: anotherAccount}),
-          'Caller can not currently transfer'
-        );
-
-        await this.token.toggleTransfers({from: cudos});
-        (await this.token.transfersEnabled()).should.equal(true);
-      });
-
       it('transfers from a non-whitelisted caller', async function () {
         await this.token.transfer(anotherAccount, ONE_TOKEN, {from: cudos});
 
@@ -325,18 +312,11 @@ contract('CudosToken', function ([_, cudos, partner, anotherAccount, otherWhitel
 
   describe('toggling transfers', function () {
     context('from authorized account', function () {
-      const from = cudos;
-
-      it('allows access and moving between states', async function () {
-        (await this.token.transfersEnabled()).should.equal(true);
-
-        await this.token.toggleTransfers({from});
-
-        (await this.token.transfersEnabled()).should.equal(false);
-
-        await this.token.toggleTransfers({from});
-
-        (await this.token.transfersEnabled()).should.equal(true);
+      it('reverts when trying to toggle twice', async function() {
+        await expectRevert(
+          this.token.toggleTransfers({from: cudos}),
+          "CudosToken.toggleTransfers: Only can be toggled on once"
+        );
       });
     });
 
@@ -356,14 +336,6 @@ contract('CudosToken', function ([_, cudos, partner, anotherAccount, otherWhitel
   });
 
   describe('whitelist admin access control via modifier', function () {
-    context('from authorized account', function () {
-      const from = cudos;
-
-      it('allows access', async function () {
-        await this.token.toggleTransfers({from});
-      });
-    });
-
     context('from unauthorized account', function () {
       const from = partner;
 
