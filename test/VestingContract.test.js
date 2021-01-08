@@ -102,16 +102,6 @@ contract('VestingContract', function ([_, cudos, random, beneficiary1, beneficia
         );
       });
 
-      it('token transfers are disabled', async () => {
-        await this.token.toggleTransfers(fromCudos);
-        (await this.token.transfersEnabled()).should.be.equal(false);
-
-        await expectRevert(
-          givenAVestingSchedule(fromCudos),
-          'Caller can not currently transfer'
-        );
-      });
-
       it('specifying a cliff greater than duration', async () => {
         await expectRevert(
           givenAVestingSchedule({
@@ -173,27 +163,6 @@ contract('VestingContract', function ([_, cudos, random, beneficiary1, beneficia
         await expectRevert(
           this.vestingContract.drawDown({from: beneficiary1}),
           'Nothing to withdraw'
-        );
-      });
-
-      it('transfers have been disabled', async () => {
-        this.now = await latest();
-
-        await givenAVestingSchedule({
-          start: this.now,
-          ...fromCudos
-        });
-
-        // fast forward 8 days
-        this._8DaysAfterScheduleStart = this.now.add(PERIOD_ONE_DAY_IN_SECONDS.mul(new BN('8')));
-        await this.vestingContract.fixTime(this._8DaysAfterScheduleStart, fromCudos);
-
-        // disable transfers
-        await this.token.toggleTransfers(fromCudos);
-
-        await expectRevert(
-          this.vestingContract.drawDown({from: beneficiary1}),
-          'Caller can not currently transfer'
         );
       });
     });

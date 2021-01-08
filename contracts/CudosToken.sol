@@ -53,12 +53,13 @@ contract CudosToken is ERC20("CudosToken", "CUDOS") {
     }
 
     /**
-     @notice Admin function for toggling whether transfers are enabled or disabled
+     @notice Admin function for toggling transfers on
      @dev The sender must have the admin role to call this method
      */
     function toggleTransfers() external {
         require(accessControls.hasAdminRole(_msgSender()), "CudosToken.toggleTransfers: Only admin");
-        transfersEnabled = !transfersEnabled;
+        require(transfersEnabled == false, "CudosToken.toggleTransfers: Only can be toggled on once");
+        transfersEnabled = true;
     }
 
     /**
