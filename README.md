@@ -1,4 +1,4 @@
-# cudos-network
+# Cudos Token
 
 ### Cudos Token Smart Contract
 
